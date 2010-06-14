@@ -1,5 +1,6 @@
 class HooksController < ApplicationController
   before_filter :find_hook, :only => [:edit, :update, :destroy]
+  before_filter :find_templates, :only => [:templates, :new]
   before_filter :can_modify?, :except => [:push]
   no_login_required :only => [:push]
   skip_before_filter :verify_authenticity_token, :only => [:push]
@@ -54,7 +55,12 @@ class HooksController < ApplicationController
   end
     
   def new
-    @hook = @current_user.hooks.build
+    if @templates.include?(params[:template])
+      @hook = @current_user.hooks.build(:name => params[:template].titleize, :message => open("#{Rails.root}/app/views/hooks/templates/#{params[:template]}.tpl").read)
+      @template_readme = RDiscount.new(open("#{Rails.root}/app/views/hooks/templates/#{params[:template]}.readme").read).to_html
+    else
+      @hook = @current_user.hooks.build
+    end
   end
   
   def edit
@@ -76,7 +82,7 @@ class HooksController < ApplicationController
     
     respond_to do |f|
       if @hook.save
-        f.html { redirect_to project_hooks_path(@current_project) }
+        f.html { redirect_to edit_project_hook_path(@current_project,@hook) }
       else
         f.html { render :edit }
       end
@@ -98,11 +104,13 @@ class HooksController < ApplicationController
     
       post = parse_data
       template = params[:template] || @hook.message
-    
-      if create_comment(template, post)
-        render :text => "OK"
-      end
+      
+      render :text => "OK", :status => create_comment(template, post)
     end
+  end
+    
+  def templates
+    
   end
   
   protected
@@ -112,7 +120,7 @@ class HooksController < ApplicationController
       params.each do |k,v|
         begin
           case params[:format]
-          when 'xml'  then data = XML.parse(v)
+          when 'xml'  then data = Crack::XML.parse(v)
           when 'json' then data = JSON.parse(v)
           else data = v
           end
@@ -128,15 +136,26 @@ class HooksController < ApplicationController
     end
 
     def create_comment(template, post)
-      text = RDiscount.new(Mustache.render(template, post)).to_html
-      
-      @hook.project.new_comment(@hook.user, @hook.project, {
-        :body => "<div class='hook'>#{text}</div>",
-        :user => @hook.user}).save!
+      begin
+        text = RDiscount.new(Mustache.render(template, post)).to_html
+        @hook.project.new_comment(@hook.user, @hook.project, {
+                                  :body => "<div class='hook'>#{text}</div>",
+                                  :user => @hook.user}).save!
+        return 200
+      rescue
+        return 406
+      end
     end
     
     def find_hook
       @hook = @current_user.hooks.find_by_id(params[:id])
+    end
+    
+    def find_templates
+      @templates = []
+      Dir.glob("#{Rails.root}/app/views/hooks/templates/*.tpl") do |file|
+        @templates << File.basename(file, ".tpl")
+      end
     end
     
     def can_modify?
