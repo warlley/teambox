@@ -26,6 +26,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.oauth_request   '/oauth/:provider',          :controller => 'oauth', :action => 'start' 
   map.oauth_callback  '/oauth/:provider/callback', :controller => 'oauth', :action => 'callback'
+  map.openid_request   '/openid/:provider',          :controller => 'openid', :action => 'start' 
+  map.openid_callback  '/openid/:provider/callback', :controller => 'openid', :action => 'callback'
   map.complete_signup '/complete_signup',          :controller => 'users', :action => 'complete_signup'
   map.unlink_app      '/oauth/:provider/unlink',   :controller => 'users', :action => 'unlink_app'
 

@@ -6,3 +6,7 @@
       %p= link_to image_tag("login_with_facebook.png"), oauth_request_path('facebook')
     - if APP_CONFIG['oauth_providers']['twitter']
       %p= link_to image_tag("login_with_twitter.png"), oauth_request_path('twitter')
+- if APP_CONFIG['openid_providers']
+  .oauth_logins
+    - if APP_CONFIG['openid_providers']['google']
+      %p= link_to image_tag("login_with_openid_google.png"), openid_request_path('google')

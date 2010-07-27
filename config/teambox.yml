@@ -150,6 +150,10 @@ defaults: &defaults
     #   access_token_path: /oauth/access_token
     #   request_token_path: /oauth/request_token
     #   user_path: /account/verify_credentials.json
+  openid_providers:
+    google:
+      name: Google
+      endpoint: https://www.google.com/accounts/o8/id
 
 development:
   <<: *defaults
