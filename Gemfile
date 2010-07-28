@@ -25,6 +25,7 @@ gem 'oauth2'
 gem 'oauth'
 gem 'ruby-openid'
 gem 'rack-openid'
+gem 'geonames'
 
 group :plugins do
   gem 'sprockets-rails', '~> 0.0.1'

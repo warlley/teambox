@@ -70,6 +70,9 @@ class User < ActiveRecord::Base
       self.invited_by = invitation.user
       invitation.user.update_attribute :invited_count, (invitation.user.invited_count + 1)
     end
+    if self.time_zone.nil?
+      self.time_zone = time_zone_from_ip(request.remote_ip)
+    end
   end
 
   def after_create
@@ -269,6 +272,13 @@ class User < ActiveRecord::Base
     link.app_user_id       = profile[:id]
     link.custom_attributes = profile[:original]
     link.save!
+  end
+  
+  def self.generate_password(length=8)
+    chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ23456789'
+    password = ''
+    length.times { |i| password << chars[rand(chars.length)] }
+    password
   end
 
   def self.find_available_login(proposed_login = nil)

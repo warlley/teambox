@@ -57,23 +57,51 @@ class OpenidController < ApplicationController
           flash[:notice] = t(:'oauth.user_already_exists_by_login', :login => @profile[:login])
           return redirect_to login_path
         else
-          if signups_enabled?
-            profile_for_session = @profile
-            profile_for_session.delete(:original)
-            session[:profile] = profile_for_session
-            app_link = AppLink.create!(:provider => @provider, 
-                                       :app_user_id => @profile[:id], 
-                                       :custom_attributes => @profile[:original])
-            session[:app_link] = app_link.id
-            return redirect_to signup_path
-          else
+          unless @invitation || signups_enabled?
             flash[:error] = t(:'users.new.no_public_signup')
             return redirect_to login_path
           end
-        end
+
+          logout_keeping_session!
+          @user = User.new(@profile)
+          @user.confirmed_user = true
+          @user.password = User.generate_password
+          @user.password_confirmation = @user.password
+          app_link = AppLink.create!(:provider => @provider, 
+                                     :app_user_id => @profile[:id], 
+                                     :custom_attributes => @profile[:original])
+                                     
+          if @user && @user.save && @user.errors.empty?
+            self.current_user = @user
+            if app_link
+              app_link.user = @user
+              app_link.save!
+            end
+      
+            if @invitation
+              if @invitation.project
+                redirect_to(project_path(@invitation.project))
+              else
+                redirect_to(group_path(@invitation.group))
+              end
+            else
+              redirect_back_or_default root_path
+            end
+            flash[:success] = t(:'users.create.thanks')
+          else
+            profile_for_session = @profile
+            profile_for_session.delete(:original)
+            session[:profile] = profile_for_session
+            session[:app_link] = app_link.id
+            
+            flash[:notice] = 'Errores: ' + @user.errors.inspect
+            
+            return redirect_to signup_path
+          end
+       end
       end
-    rescue OAuth2::HTTPError
-      render :text => %(<p>OAuth Error ?code=#{params[:code]}:</p><p>#{$!}</p><p><a href="/oauth/#{@provider}">Retry</a></p>)
+    rescue Exception => e
+      render :text => %(<p>OpenID Error #{e.message}</p><p>#{$!}</p><p><a href="/openid/#{@provider}">Retry</a></p>)
     end
   end
 
