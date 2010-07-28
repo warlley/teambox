@@ -1,21 +1,26 @@
 # TODO: Make it run on Heroku
 
-class OauthController < ApplicationController
-  skip_before_filter :login_required
+class OauthController < SinglesignonController
 
   # Starts the redirect authorization for OAuth
   def start
     @provider = params[:provider]
-
+    @invitation_token = params[:invitation]
+    
     config = APP_CONFIG['oauth_providers'][@provider]
     raise "Provider #{@provider} is missing. Please add the key and secret to the configuration file." unless config
 
     oauth = Oauth.new(config)
-    redirect_to oauth.get_authorize_url(session, oauth_callback_url)
+    redirect_to oauth.get_authorize_url(session, !@invitation_token ? oauth_callback_url({:provider => @provider}) : oauth_callback_invitation_url({:provider => @provider, :invitation => @invitation_token}))
   end
 
   def callback
     @provider = params[:provider]
+    if params[:invitation]
+      @invitation = Invitation.find_by_token(params[:invitation])
+      @invitation_token = params[:invitation] if @invitation
+    end
+    
     begin
       @config = APP_CONFIG['oauth_providers'][@provider]
       raise "Provider #{@provider} is missing. Please add the key and secret to the configuration file." unless @config
@@ -25,48 +30,9 @@ class OauthController < ApplicationController
       user = oauth.get_user(access_token)
 
       load_profile(user)
+      sso_user
 
-      # Cleanup if there's an app link not assigned to a user yet
-      AppLink.find_by_provider_and_app_user_id_and_user_id(@provider, @profile[:id],nil).try(:destroy)
-
-      if logged_in?
-        if current_user.app_links.find_by_provider(@provider)
-          flash[:notice] = t(:'oauth.already_linked_to_your_account')
-        elsif AppLink.find_by_provider_and_app_user_id(@provider, @profile[:id])
-          flash[:error] = t(:'oauth.already_taken_by_other_account')
-        else
-          current_user.link_to_app(@provider, @profile)
-          flash[:success] = t(:'oauth.account_linked')
-        end
-        return redirect_to(account_linked_accounts_path)
-      else
-        if oauth_login
-          flash[:success] = t(:'oauth.logged_in')
-          return redirect_to projects_path
-        elsif User.find_by_email(@profile[:email])
-          # TODO: locate existing user by email and ask to log in to link him
-          flash[:notice] = t(:'oauth.user_already_exists_by_email', :email => @profile[:email])
-          return redirect_to login_path
-        elsif User.find_by_login(@profile[:login])
-          flash[:notice] = t(:'oauth.user_already_exists_by_login', :login => @profile[:login])
-          return redirect_to login_path
-        else
-          if signups_enabled?
-            profile_for_session = @profile
-            profile_for_session.delete(:original)
-            session[:profile] = profile_for_session
-            app_link = AppLink.create!(:provider => @provider, 
-                                       :app_user_id => @profile[:id], 
-                                       :custom_attributes => @profile[:original])
-            session[:app_link] = app_link.id
-            return redirect_to signup_path
-          else
-            flash[:error] = t(:'users.new.no_public_signup')
-            return redirect_to login_path
-          end
-        end
-      end
-    rescue OAuth2::HTTPError
+    rescue OAuth2::HTTPError, OAuth::Error
       render :text => %(<p>OAuth Error ?code=#{params[:code]}:</p><p>#{$!}</p><p><a href="/oauth/#{@provider}">Retry</a></p>)
     end
   end
@@ -91,12 +57,6 @@ class OauthController < ApplicationController
 
       self.current_user = new_user
       new_user
-    end
-
-    # Logs in with the chosen provider, if the AppLink exists
-    def oauth_login
-      user = AppLink.find_by_provider_and_app_user_id(@provider, @profile[:id]).try(:user)
-      !!self.current_user = user
     end
 
     # Loads user's OAuth profile in @profile

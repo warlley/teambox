@@ -20,3 +20,18 @@
     %br
     .submit
       = submit_tag t('.submit'), :tabindex => 300
+      
+- if APP_CONFIG['oauth_providers'] or APP_CONFIG['openid_providers']      
+  
+  %hr{ :style => 'margin: 40px 0 0 0; border: 1px solid #000000;' }
+
+  %p{ :style => 'font-size:1.4em; line-height: 1.2em; margin: -12px 0 30px 250px; text-align: center; width: 40px; background-color: #ffffff; text-transform: uppercase; '}
+    = t(:'common.or')
+  
+  %h2= t('.title2')
+  
+  %p{ :style => 'margin-bottom: -20px;'}
+    = t('.sign_with_oauth')
+
+  = render 'sessions/oauth_login'
+      

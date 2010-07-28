@@ -24,12 +24,16 @@ ActionController::Routing::Routes.draw do |map|
 
   map.create_project_invitation '/projects/:project_id/invite/:login', :controller => 'invitations', :action => 'create', :method => :posts
 
-  map.oauth_request   '/oauth/:provider',          :controller => 'oauth', :action => 'start' 
-  map.oauth_callback  '/oauth/:provider/callback', :controller => 'oauth', :action => 'callback'
-  map.openid_request   '/openid/:provider',          :controller => 'openid', :action => 'start' 
-  map.openid_callback  '/openid/:provider/callback', :controller => 'openid', :action => 'callback'
-  map.complete_signup '/complete_signup',          :controller => 'users', :action => 'complete_signup'
-  map.unlink_app      '/oauth/:provider/unlink',   :controller => 'users', :action => 'unlink_app'
+  map.oauth_request               '/oauth/:provider',                         :controller => 'oauth',   :action => 'start' 
+  map.oauth_callback              '/oauth/:provider/callback',                :controller => 'oauth',   :action => 'callback'
+  map.oauth_request_invitation    '/oauth/:provider/:invitation',             :controller => 'oauth',   :action => 'start' 
+  map.oauth_callback_invitation   '/oauth/:provider/callback/:invitation',    :controller => 'oauth',   :action => 'callback'
+  map.openid_request              '/openid/:provider',                        :controller => 'openid',  :action => 'start' 
+  map.openid_callback             '/openid/:provider/callback',               :controller => 'openid',  :action => 'callback'
+  map.openid_request_invitation   '/openid/:provider/:invitation',            :controller => 'openid',  :action => 'start' 
+  map.openid_callback_invitation  '/openid/:provider/callback/:invitation',   :controller => 'openid',  :action => 'callback'
+  map.complete_signup             '/complete_signup',                         :controller => 'users',   :action => 'complete_signup'
+  map.unlink_app                  '/sso/:provider/unlink',                    :controller => 'users',   :action => 'unlink_app'
 
   map.javascript_environment '/javascripts/environment.js', :controller => 'javascripts', :action => 'environment'
 
