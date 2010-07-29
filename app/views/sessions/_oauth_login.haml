@@ -3,13 +3,8 @@
     = t(:'users.form.use_this_email_sso', :email => @user.email)
 - if APP_CONFIG['oauth_providers']
   .oauth_logins
-    - if APP_CONFIG['oauth_providers']['github']
-      %p= link_to image_tag("login_with_github.png"), !@invitation_token ? oauth_request_path({:provider => 'github'}) : oauth_request_invitation_path({:provider => 'github', :invitation => @invitation_token})
-    - if APP_CONFIG['oauth_providers']['facebook']
-      %p= link_to image_tag("login_with_facebook.png"), !@invitation_token ? oauth_request_path({:provider => 'facebook'}) : oauth_request_invitation_path({:provider => 'facebook', :invitation => @invitation_token})
-    - if APP_CONFIG['oauth_providers']['twitter']
-      %p= link_to image_tag("login_with_twitter.png"), !@invitation_token ? oauth_request_path({:provider => 'twitter'}) : oauth_request_invitation_path({:provider => 'twitter', :invitation => @invitation_token})
+    - APP_CONFIG['oauth_providers'].each do |provider|
+      %p= link_to image_tag("login_with_" + provider[0] + ".png"), !@invitation_token ? oauth_request_path({:provider => provider[0]}) : oauth_request_invitation_path({:provider => provider[0], :invitation => @invitation_token})
 - if APP_CONFIG['openid_providers']
-  - if APP_CONFIG['openid_providers']['google']
-    %p= link_to image_tag("login_with_openid_google.png"), !@invitation_token ? openid_request_path({:provider => 'google'}) : openid_request_invitation_path({:provider => 'google', :invitation => @invitation_token})
-    
+  - APP_CONFIG['openid_providers'].each do |provider|
+    %p= link_to image_tag("login_with_openid_" + provider[0] + ".png"), !@invitation_token ? openid_request_path({:provider => provider[0]}) : openid_request_invitation_path({:provider => provider[0], :invitation => @invitation_token})
