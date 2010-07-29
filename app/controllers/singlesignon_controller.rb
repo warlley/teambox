@@ -71,7 +71,11 @@ class SinglesignonController < ApplicationController
           profile_for_session.delete(:original)
           session[:profile] = profile_for_session
           session[:app_link] = app_link.id
-          return redirect_to signup_path
+          if @invitation
+            redirect_to signup_path(:invitation => @invitation_token)
+          else
+            redirect_to signup_path  
+          end
         end
       end
     end
