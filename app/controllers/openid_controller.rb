@@ -5,13 +5,15 @@ class OpenidController < SinglesignonController
   # Starts the redirect authorization for OpenID
   def start
     @provider = params[:provider]
+    @endpoint = params[:endpoint]
+    @invitation_token = params[:invitation]
 
     config = APP_CONFIG['openid_providers'][@provider]
     raise "Provider #{@provider} is missing. Please add the key and secret to the configuration file." unless config
 
     authenticate_with_open_id(
-      config['endpoint'], 
-      :return_to => openid_callback_url, 
+      @endpoint ? @endpoint : config['endpoint'], 
+      :return_to => !@invitation_token ? openid_callback_url({:provider => @provider}) : openid_callback_invitation_url({:provider => @provider, :invitation => @invitation_token}), 
       :required => [
         'http://axschema.org/namePerson/first', 
         'http://axschema.org/namePerson/last', 
@@ -20,9 +22,11 @@ class OpenidController < SinglesignonController
 
   def callback
     @provider = params[:provider]
+    if params[:invitation]
+      @invitation = Invitation.find_by_token(params[:invitation])
+      @invitation_token = params[:invitation] if @invitation
+    end
     begin
-      @config = APP_CONFIG['openid_providers'][@provider]
-      raise "Provider #{@provider} is missing. Please add the key and secret to the configuration file." unless @config
 
       response = request.env[Rack::OpenID::RESPONSE]
       if response.status != :success

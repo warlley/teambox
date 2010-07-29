@@ -28,6 +28,8 @@ class UsersController < ApplicationController
 
       @user ||= User.new
       @user.email = @invitation.email if @invitation
+      
+      store_location
 
       render :layout => 'sessions'
     end

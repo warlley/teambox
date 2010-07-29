@@ -22,16 +22,15 @@ class SinglesignonController < ApplicationController
         flash[:success] = t(:'oauth.logged_in')
         return redirect_to projects_path
       elsif User.find_by_email(@profile[:email])
-        # TODO: locate existing user by email and ask to log in to link him
         flash[:notice] = t(:'oauth.user_already_exists_by_email', :email => @profile[:email])
-        return redirect_to login_path
+        return redirect_back_or_default login_path
       elsif User.find_by_login(@profile[:login])
         flash[:notice] = t(:'oauth.user_already_exists_by_login', :login => @profile[:login])
-        return redirect_to login_path
+        return redirect_back_or_default login_path
       else
         unless @invitation || signups_enabled?
           flash[:error] = t(:'users.new.no_public_signup')
-          return redirect_to login_path
+          return redirect_back_or_default login_path
         end
 
         logout_keeping_session!
@@ -50,16 +49,23 @@ class SinglesignonController < ApplicationController
             app_link.save!
           end
     
+          flash[:success] = t(:'users.create.thanks_sso', :settings_url => account_settings_path)
+          
           if @invitation
-            if @invitation.project
+            # We send to the project only if the user signed up with
+            # the same email address as the one in the invitation
+            if @invitation.project && @user.email == @invitation.email
               redirect_to(project_path(@invitation.project))
-            else
-              redirect_to(group_path(@invitation.group))
+            else 
+              if @invitation.group
+                redirect_to(group_path(@invitation.group))
+              else
+                redirect_to root_path
+              end
             end
           else
             redirect_back_or_default root_path
           end
-          flash[:success] = t(:'users.create.thanks')
         else
           profile_for_session = @profile
           profile_for_session.delete(:original)

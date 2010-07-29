@@ -73,6 +73,9 @@ class User < ActiveRecord::Base
     if self.time_zone.nil?
       self.time_zone = time_zone_from_ip(request.remote_ip)
     end
+    if self.locale.nil?
+      self.locale = user_agent_locale
+    end
   end
 
   def after_create

@@ -1,3 +1,6 @@
+- if @invitation
+  .use_this_email{ :style => 'margin: 40px 0 -20px 0; padding: 10px; border: 1px rgb(220,220,150) solid; background-color: rgb(255,255,200)' }
+    = t(:'users.form.use_this_email_sso', :email => @user.email)
 - if APP_CONFIG['oauth_providers']
   .oauth_logins
     - if APP_CONFIG['oauth_providers']['github']
@@ -9,5 +12,4 @@
 - if APP_CONFIG['openid_providers']
   - if APP_CONFIG['openid_providers']['google']
     %p= link_to image_tag("login_with_openid_google.png"), !@invitation_token ? openid_request_path({:provider => 'google'}) : openid_request_invitation_path({:provider => 'google', :invitation => @invitation_token})
-
     
