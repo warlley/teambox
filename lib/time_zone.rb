@@ -7,7 +7,6 @@ module TimeZone
         ActiveSupport::TimeZone::MAPPING.index(timezone.timezone_id) unless timezone.nil?
     end
     rescue 
-
       nil
     end 
   end
