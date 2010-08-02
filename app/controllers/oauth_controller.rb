@@ -33,7 +33,8 @@ class OauthController < SinglesignonController
       sso_user
 
     rescue OAuth2::HTTPError, OAuth::Error
-      render :text => %(<p>OAuth Error ?code=#{params[:code]}:</p><p>#{$!}</p><p><a href="/oauth/#{@provider}">Retry</a></p>)
+      flash[:notice] = t(:'openid.provider_error', :provider => @provider.capitalize) 
+      return redirect_to login_path
     end
   end
 
