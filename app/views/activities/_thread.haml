@@ -1,4 +1,4 @@
-- thread = activity.thread
+- thread ||= activity.thread # you can pass :thread or :activity into the partial
 - thread_id = "#{thread.class.to_s}_#{thread.id}"
 - thread_link = thread.is_a?(Task) ? [thread.task_list.project, thread.task_list, thread] : [thread.project, thread]
 - comments = thread.comments

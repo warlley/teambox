@@ -49,6 +49,10 @@ module ActivitiesHelper
     end
   end
 
+  def render_thread(thread)
+    render 'activities/thread', :thread => thread
+  end
+
   def show_activity(activity)
     if activity.target && ActivityTypes.include?(activity.action_type)
       render "activities/#{activity.action_type}", :activity => activity,

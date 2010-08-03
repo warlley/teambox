@@ -1,0 +1,59 @@
+List of methods which may need cleanup:
+
+new_comment_form now used for new comments and at the bottom of threads
+task_archive_box should use JS, not AJAX
+list_comments might be obsolete
+
+show_threaded_activity
+
+insert_unarchive_box
+
+
+A comment should fail gracefully if
+  - It has an empty body
+  - It's a duplicate comment
+
+If a new comment fails, we should delete its conversation and the activity it generated.
+Should we check if the comment is valid before submitting?
+
+@threaded = params[:thread] == "true"
+
+
+conversation.rb: simple
+
+
+fetch new comments after post
+# Fetch new comments after post and render them
+if @new_comments
+  page.insert_html :top, :comments, :text => list_comments(@new_comments, @comment.target)
+  page << "$('last_comment_id').writeAttribute('value', #{@last_id})"
+end
+
+after failing to post and succeeding, errors should be cleared
+
+autocompletion
+
+verify remove_form_errors's behaviour with classes and ids
+
+
+Conversations should be able to be turned into tasks.
+Tasks should be able to be closed and reopened
+
+Conversations should update conversation#show if you're there
+Tasks should update task#show if you're there
+Both should update watchers
+
+watch dynamic resizing:
+page << "Comment.watch_edit();"
+page << "$$('.new_comment').first().reset()"
+page << "$$('textarea[name*=\"[body]\"]').first().setStyle({ height: '' })"
+
+reload_javascript_events
+
+
+page << reset_autorefresh
+page << autorefresh(@comment.activity, @current_project)
+
+reactivate refresh from project#index and #show
+
+look at javascript_projects_people

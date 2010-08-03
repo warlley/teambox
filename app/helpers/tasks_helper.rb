@@ -242,14 +242,6 @@ module TasksHelper
       :task => task
   end
 
-  def render_task(project,task_list,task,comment)
-    render 'tasks/show',
-      :project => project,
-      :task_list => task_list,
-      :task => task,
-      :comment => comment
-  end
-
   def update_active_task(project,task_list,task,comment)
     page.replace_html 'content', :partial => 'tasks/show',
       :locals => {

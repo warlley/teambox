@@ -7,34 +7,13 @@ class CommentsController < ApplicationController
   before_filter :set_page_title
 
   def create
-    if params.has_key?(:project_id)
-      @comment  = @current_project.new_comment(current_user,@target,params[:comment])
-      @comments = @current_project.comments
-    else
-      @comment = current_user.new_comment(current_user,@target,params[:comment])
-    end
+    @comment    = (@current_project || current_user).
+                    new_comment(current_user, @target, params[:comment])
+    @new_thread = @target.is_a?(Project) # if target is a Project, we'll start a new thread
+    @saved      = @comment.save
+    @target     = @comment.target
 
-    # If this is a status update, we'll turn it in a new `simple` Conversation
-    if @comment.target.is_a?(Project)
-      conversation = @current_project.new_conversation(current_user, :simple => true )
-      conversation.body = @comment.body
-      if conversation.save
-        comment = conversation.comments.last
-        comment.uploads = @comment.uploads
-        comment.save
-        @comment = comment
-      else
-        @comment.errors.add(:body, :no_body_generic)
-      end
-      @new_conversation = true
-    else
-      @comment.save
-    end
-
-    @target = @comment.target
-
-    # Evaluate target
-    case @target
+    case @comment.target
     when Conversation
       @conversation = @comment.target
       redirect_path = project_conversation_path(@current_project, @conversation)
@@ -42,24 +21,14 @@ class CommentsController < ApplicationController
       @task_list = @comment.target
       redirect_path = project_task_list_path(@current_project, @task_list)
     when Task
-      @comment.reload unless @comment.new_record?
       @task = @comment.target
-      @target = @task
       @task_list = @task.task_list
-      @new_comment = @current_project.comments.new
-      @new_comment.target = @task
-      @new_comment.status = @task.status
       redirect_path = project_task_list_task_path(@current_project, @task_list, @task)
     else
-      redirect_path = project_path(@target || @current_project)
+      redirect_path = project_path(@comment.target || @current_project)
     end
 
     respond_to do |f|
-      if (@threaded = params[:thread] == "true") || @new_conversation # Comment from Overview
-        @comment.activity = Activity.first(:conditions => {:target_type => "Comment", :target_id => @comment.id})
-        redirect_path = request.referer
-      end
-
       if !@comment.new_record?
         # success!
         session[:last_project_commented] = @comment.project.permalink
@@ -245,7 +214,7 @@ class CommentsController < ApplicationController
         @last_id = params[:last_comment_id].to_i
         new_id = @comment.new_record? ? 0 : @comment.id
         @new_comments = @target.comments.find(:all, :conditions => ['comments.id != ? AND comments.id > ?', new_id, @last_id])
-        @last_id = @new_comments[0].id unless @new_comments.empty?
+        @last_id = @new_comments[0].id if @new_comments.any?
       end
     end
 end

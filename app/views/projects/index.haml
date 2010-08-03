@@ -11,7 +11,7 @@
     #activities
       = list_threads(@threads)
       = show_more_button(@activities)
-    = javascript_tag autorefresh(@activities)
+    = #javascript_tag autorefresh(@activities)
   - else
     = render 'projects/primer'
 

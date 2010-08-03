@@ -3,11 +3,14 @@ class Comment
   def before_create
     self.target ||= project
 
-    set_status_and_assigned if self.target.is_a?(Task)
+    case target
+    when Task then set_status_and_assigned
+    when Project then create_a_parent_conversation
+    end
   end
 
   def after_create
-    return unless self.target
+    return unless target
     target.reload
     
     @activity = project && project.log_activity(self, 'create')
@@ -33,7 +36,13 @@ class Comment
       elsif status != Task::STATUSES[:open]
         self.assigned = nil
       end
-      
     end
-    
+
+    def create_a_parent_conversation
+      # We create an empty conversation, skipping validations, to attach the comment to it
+      conversation = project.new_conversation(user, :simple => true)
+      conversation.save(false)
+      self.target = conversation
+    end
+
 end
