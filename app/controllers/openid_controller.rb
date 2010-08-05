@@ -55,9 +55,9 @@ class OpenidController < SinglesignonController
       ax = OpenID::AX::FetchResponse.from_success_response(response)
       @profile[:id]      = ax ? ax["http://axschema.org/contact/email"].first : sreg['email']
       @profile[:email]      = ax ? ax["http://axschema.org/contact/email"].first : sreg['email']
-      @profile[:login]      = @profile[:email].split(/@/).flatten.first
       @profile[:first_name] = ax ? ax["http://axschema.org/namePerson/first"].first : sreg['first']
       @profile[:last_name]  = ax ? ax["http://axschema.org/namePerson/last"].first : sreg['last']
+      @profile[:login]      = @profile[:email].split(/@/).flatten.first
       @profile[:login]      = User.find_available_login(@profile[:login])
     end
 end

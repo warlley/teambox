@@ -36,7 +36,7 @@ class SinglesignonController < ApplicationController
         logout_keeping_session!
         @user = User.new(@profile)
         @user.confirmed_user = true
-        @user.password = User.generate_password
+        @user.password = ActiveSupport::SecureRandom.base64(10)
         @user.password_confirmation = @user.password
         app_link = AppLink.create!(:provider => @provider, 
                                    :app_user_id => @profile[:id], 

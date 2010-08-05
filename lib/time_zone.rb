@@ -5,7 +5,7 @@ module TimeZone
       if location.string =~ /Latitude: (.+?)\nLongitude: (.+?)\n/
         timezone = Geonames::WebService.timezone($1, $2)
         ActiveSupport::TimeZone::MAPPING.index(timezone.timezone_id) unless timezone.nil?
-    end
+      end
     rescue 
       nil
     end 
