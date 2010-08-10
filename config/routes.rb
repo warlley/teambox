@@ -150,6 +150,7 @@ ActionController::Routing::Routes.draw do |map|
       project.resources :pages, :except => [:new, :edit], :member => {:reorder => :put}, :collection => {:resort => :put}
       project.resources :notes, :except => [:new, :edit]
       project.resources :dividers, :except => [:new, :edit]
+      project.search 'search', :controller => 'search'
     end
     api.resources :activities, :only => [:index, :show]
     api.resources :invitations, :except => [:new, :edit, :update, :create], :member => {:accept => :put}
@@ -157,6 +158,7 @@ ActionController::Routing::Routes.draw do |map|
     api.resources :tasks, :except => [:new, :edit, :create], :member => {:watch => :put, :unwatch => :put}
     api.resources :pages, :except => [:new, :edit]
     
+    api.search 'search', :controller => 'search'
     api.account 'account', :controller => :users, :action => :current, :conditions => { :method => :get }
   end
   
